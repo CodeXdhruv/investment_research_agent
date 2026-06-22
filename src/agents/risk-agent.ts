@@ -3,22 +3,20 @@ import { z } from 'zod';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import { PromptTemplate } from '@langchain/core/prompts';
 
-const financeOutputSchema = z.object({
+const outputSchema = z.object({
   score: z.number().min(0).max(100),
-  strengths: z.array(z.string()),
-  weaknesses: z.array(z.string()),
-  metrics: z.record(z.any())
+  risks: z.array(z.string())
 });
 
-export class FinanceAgent {
-  private parser = StructuredOutputParser.fromZodSchema(financeOutputSchema);
+export class RiskAgent {
+  private parser = StructuredOutputParser.fromZodSchema(outputSchema);
   
   async analyze(data: any) {
     const model = getGeminiModel(0.1);
     
     const prompt = PromptTemplate.fromTemplate(`
-      You are an expert Financial Analyst.
-      Analyze the following financial data:
+      You are an expert Risk Manager.
+      Analyze the following risk data for competition, regulatory, debt, and macro risks:
       {data}
       
       {format_instructions}
@@ -27,16 +25,15 @@ export class FinanceAgent {
     const chain = prompt.pipe(model).pipe(this.parser);
     
     try {
-      const response = await chain.invoke({
+      return await chain.invoke({
         data: JSON.stringify(data),
         format_instructions: this.parser.getFormatInstructions(),
       });
-      return response;
     } catch (e) {
-      console.error("FinanceAgent Error", e);
-      return { score: 50, strengths: [], weaknesses: [], metrics: data };
+      console.error("RiskAgent Error", e);
+      return { score: 50, risks: ["Data unavailable"] };
     }
   }
 }
 
-export const financeAgent = new FinanceAgent();
+export const riskAgent = new RiskAgent();

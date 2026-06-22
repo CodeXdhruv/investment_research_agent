@@ -1,26 +1,25 @@
 import { getGeminiModel } from './base-agent';
 import { z } from 'zod';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
-import { PromptTemplate } from '@langchain/core/prompts';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 
-const outputSchema = z.object({
+const valuationOutputSchema = z.object({
   score: z.number().min(0).max(100),
-  valuationSummary: z.string()
+  isUndervalued: z.boolean(),
+  targetPrice: z.number().optional(),
+  reasoning: z.string()
 });
 
 export class ValuationAgent {
-  private parser = StructuredOutputParser.fromZodSchema(outputSchema);
+  private parser = StructuredOutputParser.fromZodSchema(valuationOutputSchema);
   
   async analyze(data: any) {
     const model = getGeminiModel(0.1);
     
-    const prompt = PromptTemplate.fromTemplate(`
-      You are an expert Valuation Analyst.
-      Analyze the following valuation data (PE, PEG, PB, Fair Value):
-      {data}
-      
-      {format_instructions}
-    `);
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You are an expert Valuation Analyst. You must strictly output valid JSON matching the format instructions."],
+      ["user", "Analyze the following valuation data:\n{data}\n\n{format_instructions}"]
+    ]);
     
     const chain = prompt.pipe(model).pipe(this.parser);
     

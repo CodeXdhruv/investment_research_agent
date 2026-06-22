@@ -1,28 +1,25 @@
 import { getGeminiModel } from './base-agent';
 import { z } from 'zod';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
-import { PromptTemplate } from '@langchain/core/prompts';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 
-const outputSchema = z.object({
+const sentimentOutputSchema = z.object({
   score: z.number().min(0).max(100),
-  bullish: z.number(),
-  bearish: z.number(),
-  highlights: z.array(z.string())
+  bullishFactors: z.array(z.string()),
+  bearishFactors: z.array(z.string()),
+  overallMood: z.string()
 });
 
 export class SentimentAgent {
-  private parser = StructuredOutputParser.fromZodSchema(outputSchema);
+  private parser = StructuredOutputParser.fromZodSchema(sentimentOutputSchema);
   
   async analyze(data: any) {
     const model = getGeminiModel(0.2);
     
-    const prompt = PromptTemplate.fromTemplate(`
-      You are an expert Market Sentiment Analyst.
-      Analyze the following sentiment data (e.g., Reddit):
-      {data}
-      
-      {format_instructions}
-    `);
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You are an expert Market Sentiment Analyst. You must strictly output valid JSON matching the format instructions."],
+      ["user", "Analyze the following market sentiment data:\n{data}\n\n{format_instructions}"]
+    ]);
     
     const chain = prompt.pipe(model).pipe(this.parser);
     

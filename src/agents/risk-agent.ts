@@ -1,26 +1,24 @@
 import { getGeminiModel } from './base-agent';
 import { z } from 'zod';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
-import { PromptTemplate } from '@langchain/core/prompts';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 
-const outputSchema = z.object({
+const riskOutputSchema = z.object({
   score: z.number().min(0).max(100),
-  risks: z.array(z.string())
+  keyRisks: z.array(z.string()),
+  mitigatingFactors: z.array(z.string())
 });
 
 export class RiskAgent {
-  private parser = StructuredOutputParser.fromZodSchema(outputSchema);
+  private parser = StructuredOutputParser.fromZodSchema(riskOutputSchema);
   
   async analyze(data: any) {
     const model = getGeminiModel(0.1);
     
-    const prompt = PromptTemplate.fromTemplate(`
-      You are an expert Risk Manager.
-      Analyze the following risk data for competition, regulatory, debt, and macro risks:
-      {data}
-      
-      {format_instructions}
-    `);
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You are an expert Risk Management Analyst. You must strictly output valid JSON matching the format instructions."],
+      ["user", "Analyze the following risk data:\n{data}\n\n{format_instructions}"]
+    ]);
     
     const chain = prompt.pipe(model).pipe(this.parser);
     

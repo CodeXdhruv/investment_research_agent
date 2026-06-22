@@ -1,28 +1,24 @@
 import { getGeminiModel } from './base-agent';
 import { z } from 'zod';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
-import { PromptTemplate } from '@langchain/core/prompts';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 
-const outputSchema = z.object({
+const industryOutputSchema = z.object({
   score: z.number().min(0).max(100),
-  marketSize: z.string(),
-  growthRate: z.string(),
-  trends: z.array(z.string())
+  trends: z.array(z.string()),
+  competitivePosition: z.string()
 });
 
 export class IndustryAgent {
-  private parser = StructuredOutputParser.fromZodSchema(outputSchema);
+  private parser = StructuredOutputParser.fromZodSchema(industryOutputSchema);
   
   async analyze(data: any) {
     const model = getGeminiModel(0.1);
     
-    const prompt = PromptTemplate.fromTemplate(`
-      You are an expert Industry Analyst.
-      Analyze the following industry data:
-      {data}
-      
-      {format_instructions}
-    `);
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You are an expert Industry and Sector Analyst. You must strictly output valid JSON matching the format instructions."],
+      ["user", "Analyze the following industry data:\n{data}\n\n{format_instructions}"]
+    ]);
     
     const chain = prompt.pipe(model).pipe(this.parser);
     

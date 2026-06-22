@@ -1,28 +1,25 @@
 import { getGeminiModel } from './base-agent';
 import { z } from 'zod';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
-import { PromptTemplate } from '@langchain/core/prompts';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 
-const outputSchema = z.object({
-  recommendation: z.enum(["INVEST", "HOLD", "PASS"]),
-  confidence: z.number().min(0).max(1),
+const committeeOutputSchema = z.object({
+  recommendation: z.enum(["STRONG_BUY", "BUY", "HOLD", "SELL", "STRONG_SELL"]),
   score: z.number().min(0).max(100),
+  confidence: z.number().min(0).max(100),
   reasoning: z.string()
 });
 
 export class CommitteeAgent {
-  private parser = StructuredOutputParser.fromZodSchema(outputSchema);
+  private parser = StructuredOutputParser.fromZodSchema(committeeOutputSchema);
 
   async evaluate(agentOutputs: any[]) {
     const model = getGeminiModel(0.1); 
     
-    const prompt = PromptTemplate.fromTemplate(`
-      You are the Head of the Investment Committee.
-      Review the following reports from the sub-agents and generate a final investment recommendation.
-      Agent Reports: {reports}
-      
-      {format_instructions}
-    `);
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You are the Head of the Investment Committee. You must strictly output valid JSON matching the format instructions. Provide the final investment verdict based on the sub-agents' inputs."],
+      ["user", "Review the following aggregated reports from your specialized agents:\n{reports}\n\n{format_instructions}"]
+    ]);
     
     const chain = prompt.pipe(model).pipe(this.parser);
     

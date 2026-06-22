@@ -1,28 +1,24 @@
 import { getGeminiModel } from './base-agent';
 import { z } from 'zod';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
-import { PromptTemplate } from '@langchain/core/prompts';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 
-const outputSchema = z.object({
+const newsOutputSchema = z.object({
   score: z.number().min(0).max(100),
-  positiveNews: z.array(z.string()),
-  negativeNews: z.array(z.string()),
-  keyEvents: z.array(z.string())
+  keyEvents: z.array(z.string()),
+  marketImpact: z.string()
 });
 
 export class NewsAgent {
-  private parser = StructuredOutputParser.fromZodSchema(outputSchema);
+  private parser = StructuredOutputParser.fromZodSchema(newsOutputSchema);
   
   async analyze(data: any) {
     const model = getGeminiModel(0.2);
     
-    const prompt = PromptTemplate.fromTemplate(`
-      You are an expert News Analyst.
-      Analyze the following news data:
-      {data}
-      
-      {format_instructions}
-    `);
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You are an expert News and Macro-economic Analyst. You must strictly output valid JSON matching the format instructions."],
+      ["user", "Analyze the following news data:\n{data}\n\n{format_instructions}"]
+    ]);
     
     const chain = prompt.pipe(model).pipe(this.parser);
     

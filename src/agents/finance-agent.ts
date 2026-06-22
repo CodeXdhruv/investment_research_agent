@@ -1,7 +1,7 @@
 import { getGeminiModel } from './base-agent';
 import { z } from 'zod';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
-import { PromptTemplate } from '@langchain/core/prompts';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 
 const financeOutputSchema = z.object({
   score: z.number().min(0).max(100),
@@ -16,13 +16,10 @@ export class FinanceAgent {
   async analyze(data: any) {
     const model = getGeminiModel(0.1);
     
-    const prompt = PromptTemplate.fromTemplate(`
-      You are an expert Financial Analyst.
-      Analyze the following financial data:
-      {data}
-      
-      {format_instructions}
-    `);
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You are an expert Financial Analyst. You must strictly output valid JSON matching the format instructions."],
+      ["user", "Analyze the following financial data:\n{data}\n\n{format_instructions}"]
+    ]);
     
     const chain = prompt.pipe(model).pipe(this.parser);
     

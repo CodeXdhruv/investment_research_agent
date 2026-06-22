@@ -1,25 +1,24 @@
 import { getGeminiModel } from './base-agent';
 import { z } from 'zod';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
-import { PromptTemplate } from '@langchain/core/prompts';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 
-const outputSchema = z.object({
-  arguments: z.array(z.string())
+const bullOutputSchema = z.object({
+  thesis: z.string(),
+  keyArguments: z.array(z.string()),
+  targetPrice: z.number().optional()
 });
 
 export class BullAgent {
-  private parser = StructuredOutputParser.fromZodSchema(outputSchema);
+  private parser = StructuredOutputParser.fromZodSchema(bullOutputSchema);
   
   async analyze(data: any) {
-    const model = getGeminiModel(0.7); // Higher temperature for creativity
+    const model = getGeminiModel(0.4);
     
-    const prompt = PromptTemplate.fromTemplate(`
-      You are the ultimate Bull Investor.
-      Generate the strongest bullish thesis based on the following data:
-      {data}
-      
-      {format_instructions}
-    `);
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You are an aggressive Bull Market Analyst. You must strictly output valid JSON matching the format instructions. Your goal is to build the strongest possible positive case for the company."],
+      ["user", "Analyze the following data and provide a bullish thesis:\n{data}\n\n{format_instructions}"]
+    ]);
     
     const chain = prompt.pipe(model).pipe(this.parser);
     

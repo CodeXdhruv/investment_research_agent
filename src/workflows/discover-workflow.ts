@@ -9,8 +9,9 @@ import { finnhubService } from '../services/providers/finnhub-service';
 export class DiscoverWorkflow {
   async run() {
     // 1. Market Scanner
-    // We can use a combination of trending tickers from Yahoo Finance or just a predefined sector for discovery
-    const candidates = ["NVDA", "AMD", "TSM"]; 
+    // Fetch trending tickers from Yahoo Finance
+    const trending = await yahooFinanceService.getTrending();
+    const candidates = trending.length > 0 ? trending.slice(0, 3) : ["NVDA", "AMD", "TSM"]; 
     
     const results = await Promise.all(candidates.map(async (ticker) => {
       // 2. Gather Data

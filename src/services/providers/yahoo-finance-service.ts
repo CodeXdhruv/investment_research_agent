@@ -51,6 +51,16 @@ export class YahooFinanceService {
       return [];
     }
   }
+
+  async getTrending() {
+    try {
+      const result = await yahooFinance.trendingSymbols('US');
+      return result.quotes.map(q => q.symbol);
+    } catch (e) {
+      console.error("Yahoo Finance getTrending Error", e);
+      return [];
+    }
+  }
 }
 
 export const yahooFinanceService = new YahooFinanceService();

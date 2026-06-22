@@ -6,7 +6,7 @@ export default function Home() {
     { method: 'POST', path: '/api/v1/compare', desc: 'Compare multiple companies and generate a matrix' },
     { method: 'POST', path: '/api/v1/debate', desc: 'Run a Bull vs Bear AI debate for a ticker' },
     { method: 'GET', path: '/api/v1/discover', desc: 'Scan the market and discover investment opportunities' },
-    { method: 'GET', path: '/api/v1/watchlist', desc: 'Get the current user\\'s watchlist' },
+    { method: 'GET', path: '/api/v1/watchlist', desc: "Get the current user's watchlist" },
     { method: 'POST', path: '/api/v1/watchlist', desc: 'Add a ticker to the watchlist' },
     { method: 'DELETE', path: '/api/v1/watchlist/:ticker', desc: 'Remove a ticker from the watchlist' },
     { method: 'POST', path: '/api/v1/chat', desc: 'Chat with the RAG system regarding a research report' },

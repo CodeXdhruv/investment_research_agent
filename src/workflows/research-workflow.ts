@@ -6,6 +6,7 @@ import { industryAgent } from '../agents/industry-agent';
 import { riskAgent } from '../agents/risk-agent';
 import { valuationAgent } from '../agents/valuation-agent';
 import { committeeAgent } from '../agents/committee-agent';
+import { prisma } from '../lib/prisma';
 
 // Define the state for the workflow
 interface ResearchState {
@@ -93,9 +94,39 @@ researchGraph.addEdge("committee", END);
 export const compiledResearchGraph = researchGraph.compile();
 
 export class ResearchWorkflow {
-  async run(ticker: string) {
+  async run(ticker: string, userId?: string) {
     const initialState = { ticker, data: null };
     const finalState = await compiledResearchGraph.invoke(initialState);
+    
+    // Store in DB if userId is provided
+    if (userId) {
+      try {
+        await prisma.researchReport.create({
+          data: {
+            userId,
+            company: ticker, // Placeholder: resolve real name via provider
+            ticker,
+            recommendation: finalState.finalReport.recommendation,
+            score: finalState.finalReport.score,
+            confidence: finalState.finalReport.confidence,
+            summary: finalState.finalReport.reasoning,
+            agentOutputs: {
+              create: [
+                { agentName: 'finance', output: JSON.stringify(finalState.financeOutput) },
+                { agentName: 'news', output: JSON.stringify(finalState.newsOutput) },
+                { agentName: 'sentiment', output: JSON.stringify(finalState.sentimentOutput) },
+                { agentName: 'industry', output: JSON.stringify(finalState.industryOutput) },
+                { agentName: 'risk', output: JSON.stringify(finalState.riskOutput) },
+                { agentName: 'valuation', output: JSON.stringify(finalState.valuationOutput) }
+              ]
+            }
+          }
+        });
+      } catch (err) {
+        console.error("Failed to store research report", err);
+      }
+    }
+
     return finalState.finalReport;
   }
 }

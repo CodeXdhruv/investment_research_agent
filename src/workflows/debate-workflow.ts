@@ -3,6 +3,7 @@ import { bullAgent } from '../agents/bull-agent';
 import { bearAgent } from '../agents/bear-agent';
 import { moderatorAgent } from '../agents/moderator-agent';
 import { committeeAgent } from '../agents/committee-agent';
+import { prisma } from '../lib/prisma';
 
 interface DebateState {
   ticker: string;
@@ -63,9 +64,27 @@ debateGraph.addEdge("committee", END);
 export const compiledDebateGraph = debateGraph.compile();
 
 export class DebateWorkflow {
-  async run(ticker: string) {
+  async run(ticker: string, userId?: string) {
     const initialState = { ticker, data: null };
     const finalState = await compiledDebateGraph.invoke(initialState);
+    
+    if (userId) {
+      try {
+        await prisma.debate.create({
+          data: {
+            userId,
+            ticker,
+            bullOutput: JSON.stringify(finalState.bullOutput),
+            bearOutput: JSON.stringify(finalState.bearOutput),
+            moderatorOutput: JSON.stringify(finalState.moderatorSummary),
+            committeeOutput: JSON.stringify(finalState.committeeDecision)
+          }
+        });
+      } catch (e) {
+        console.error("Failed to save debate", e);
+      }
+    }
+
     return {
       bull: finalState.bullOutput,
       bear: finalState.bearOutput,

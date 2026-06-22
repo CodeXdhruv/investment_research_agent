@@ -3,20 +3,27 @@ import { industryAgent } from '../agents/industry-agent';
 import { valuationAgent } from '../agents/valuation-agent';
 import { getGeminiModel } from '../agents/base-agent';
 import { PromptTemplate } from '@langchain/core/prompts';
+import { yahooFinanceService } from '../services/providers/yahoo-finance-service';
+import { finnhubService } from '../services/providers/finnhub-service';
 
 export class DiscoverWorkflow {
   async run() {
-    // 1. Market Scanner (Stub: Return top 3 trending)
-    const candidates = ["NVDA", "AMD", "TSM"];
+    // 1. Market Scanner
+    // We can use a combination of trending tickers from Yahoo Finance or just a predefined sector for discovery
+    const candidates = ["NVDA", "AMD", "TSM"]; 
     
     const results = await Promise.all(candidates.map(async (ticker) => {
-      // 2. Gather Data (Stub)
-      const data = { revenue: 200, industry: "Semiconductors", valuation: "High" };
+      // 2. Gather Data
+      const [financials, valuationData, profile] = await Promise.all([
+        yahooFinanceService.getFinancialData(ticker),
+        yahooFinanceService.getValuationMetrics(ticker),
+        finnhubService.getCompanyProfile(ticker)
+      ]);
       
       // 3. Run Agents
-      const finance = await financeAgent.analyze(data.revenue);
-      const industry = await industryAgent.analyze(data.industry);
-      const valuation = await valuationAgent.analyze(data.valuation);
+      const finance = await financeAgent.analyze(financials);
+      const industry = await industryAgent.analyze(profile);
+      const valuation = await valuationAgent.analyze(valuationData);
       
       return { ticker, finance, industry, valuation };
     }));

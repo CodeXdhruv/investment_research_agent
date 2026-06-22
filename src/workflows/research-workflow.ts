@@ -7,6 +7,11 @@ import { riskAgent } from '../agents/risk-agent';
 import { valuationAgent } from '../agents/valuation-agent';
 import { committeeAgent } from '../agents/committee-agent';
 import { prisma } from '../lib/prisma';
+import { yahooFinanceService } from '../services/providers/yahoo-finance-service';
+import { finnhubService } from '../services/providers/finnhub-service';
+import { newsApiService } from '../services/providers/news-api-service';
+import { redditApiService } from '../services/providers/reddit-api-service';
+import { secFilingsService } from '../services/providers/sec-filings-service';
 
 // Define the state for the workflow
 interface ResearchState {
@@ -35,16 +40,28 @@ const researchGraph = new StateGraph<ResearchState>({
   }
 });
 
-// 1. Gather Data (simplified)
+// 1. Gather Data
 researchGraph.addNode("gather_data", async (state) => {
+  const ticker = state.ticker;
+  
+  // Run all provider fetches in parallel
+  const [financials, valuation, profile, news, sentiment, filings] = await Promise.all([
+    yahooFinanceService.getFinancialData(ticker),
+    yahooFinanceService.getValuationMetrics(ticker),
+    finnhubService.getCompanyProfile(ticker),
+    newsApiService.getCompanyNews(ticker),
+    redditApiService.getMarketSentiment(ticker),
+    secFilingsService.getLatestFilings(ticker)
+  ]);
+
   return {
     data: {
-      financials: { revenue: 100 },
-      news: "Good news",
-      sentiment: "Bullish",
-      industry: "Tech",
-      risk: "Low",
-      valuation: "Fair"
+      financials,
+      valuation,
+      industry: profile,
+      news,
+      sentiment,
+      risk: { filings, financials, valuation }, // Pass aggregated data for risk analysis
     }
   };
 });

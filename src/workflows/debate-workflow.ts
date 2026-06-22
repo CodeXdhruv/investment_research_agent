@@ -4,6 +4,9 @@ import { bearAgent } from '../agents/bear-agent';
 import { moderatorAgent } from '../agents/moderator-agent';
 import { committeeAgent } from '../agents/committee-agent';
 import { prisma } from '../lib/prisma';
+import { yahooFinanceService } from '../services/providers/yahoo-finance-service';
+import { newsApiService } from '../services/providers/news-api-service';
+import { redditApiService } from '../services/providers/reddit-api-service';
 
 interface DebateState {
   ticker: string;
@@ -26,11 +29,18 @@ const debateGraph = new StateGraph<DebateState>({
 });
 
 debateGraph.addNode("gather_data", async (state) => {
+  const ticker = state.ticker;
+  const [financials, news, marketSentiment] = await Promise.all([
+    yahooFinanceService.getFinancialData(ticker),
+    newsApiService.getCompanyNews(ticker),
+    redditApiService.getMarketSentiment(ticker)
+  ]);
+
   return {
     data: {
-      financials: { revenue: 100 },
-      news: "Mixed",
-      marketSentiment: "Volatile"
+      financials,
+      news,
+      marketSentiment
     }
   };
 });

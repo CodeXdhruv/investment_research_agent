@@ -12,6 +12,7 @@ export default function Home() {
     { method: 'POST', path: '/api/v1/chat', desc: 'Chat with the RAG system regarding a research report' },
     { method: 'GET', path: '/api/v1/market/trending', desc: 'Get currently trending market symbols' },
     { method: 'GET', path: '/api/v1/market/mood', desc: 'Get general market sentiment from Reddit' },
+    { method: 'GET', path: '/api/v1/market/dashboard', desc: 'Get aggregated data for Market Insights Dashboard' },
   ];
 
   return (

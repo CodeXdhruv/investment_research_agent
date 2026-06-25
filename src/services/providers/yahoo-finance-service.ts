@@ -1,5 +1,7 @@
-import yahooFinance from 'yahoo-finance2';
+import YahooFinance from 'yahoo-finance2';
 
+// @ts-ignore
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 export class YahooFinanceService {
   async getFinancialData(ticker: string) {
     try {
@@ -9,8 +11,9 @@ export class YahooFinanceService {
       
       const fd = result.financialData;
       return {
-        revenue: fd?.totalRevenue,
-        profit: fd?.grossProfits,
+        totalRevenue: fd?.totalRevenue,
+        netIncome: fd?.netIncomeToCommon || fd?.ebitda || fd?.grossProfits,
+        grossMargins: fd?.grossMargins || fd?.profitMargins || fd?.operatingMargins,
         operatingMargins: fd?.operatingMargins,
         returnOnEquity: fd?.returnOnEquity,
         totalDebt: fd?.totalDebt,
@@ -18,9 +21,19 @@ export class YahooFinanceService {
         currentPrice: fd?.currentPrice,
         targetMeanPrice: fd?.targetMeanPrice
       };
-    } catch (e) {
-      console.error("Yahoo Finance getFinancialData Error", e);
-      return null;
+    } catch (e: any) {
+      console.error(`Yahoo Finance getFinancialData Error for ${ticker}:`, e.message);
+      // Fallback: If it's a crypto or lacks fundamentals, just get the current price
+      try {
+        const quote = await yahooFinance.quote(ticker);
+        return {
+          currentPrice: quote.regularMarketPrice,
+          change: quote.regularMarketChange,
+          changePercent: quote.regularMarketChangePercent
+        };
+      } catch (fallbackErr) {
+        return null;
+      }
     }
   }
   
@@ -59,6 +72,22 @@ export class YahooFinanceService {
     } catch (e) {
       console.error("Yahoo Finance getTrending Error", e);
       return [];
+    }
+  }
+
+  async getQuote(ticker: string) {
+    try {
+      const quote = await yahooFinance.quote(ticker);
+      return {
+        currentPrice: quote.regularMarketPrice,
+        change: quote.regularMarketChange,
+        changePercent: quote.regularMarketChangePercent,
+        marketCap: quote.marketCap,
+        volume: quote.regularMarketVolume
+      };
+    } catch (e) {
+      console.error(`YahooFinance getQuote Error for ${ticker}`, e);
+      return null;
     }
   }
 }

@@ -6,7 +6,7 @@ export class SecFilingsService {
       // 1. Get CIK from ticker
       const companyTickersRes = await axios.get('https://www.sec.gov/files/company_tickers.json', {
         headers: {
-          'User-Agent': 'AIInvestmentResearchBot admin@example.com'
+          'User-Agent': 'TrendxResearch admin@trendx.app'
         }
       });
       
@@ -20,7 +20,7 @@ export class SecFilingsService {
       // 2. Fetch submissions
       const submissionsRes = await axios.get(`https://data.sec.gov/submissions/CIK${cikStr}.json`, {
         headers: {
-          'User-Agent': 'AIInvestmentResearchBot admin@example.com'
+          'User-Agent': 'TrendxResearch admin@trendx.app'
         }
       });
 

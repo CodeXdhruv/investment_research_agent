@@ -29,6 +29,21 @@ export class FinnhubService {
       return [];
     }
   }
+  async getUpcomingEarnings() {
+    if (!this.apiKey) return [];
+    try {
+      const from = new Date();
+      const to = new Date();
+      to.setDate(to.getDate() + 14);
+      const fromStr = from.toISOString().split('T')[0];
+      const toStr = to.toISOString().split('T')[0];
+      const response = await axios.get(`${this.baseUrl}/calendar/earnings?from=${fromStr}&to=${toStr}&token=${this.apiKey}`);
+      return response.data.earningsCalendar || [];
+    } catch (e) {
+      console.error("Finnhub getUpcomingEarnings Error", e);
+      return [];
+    }
+  }
 }
 
 export const finnhubService = new FinnhubService();

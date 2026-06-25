@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { ragService } from '../../../../services/rag/rag-service';
 import { prisma } from '../../../../lib/prisma';
 
@@ -15,13 +15,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: { code: 'BAD_REQUEST', message: "Question and researchId are required" } }, { status: 400 });
     }
 
+    let user = await prisma.user.findUnique({ where: { clerkUserId: userId } });
+    if (!user) {
+      const clerkUser = await currentUser();
+      const email = clerkUser?.emailAddresses[0]?.emailAddress || `${userId}@placeholder.com`;
+      user = await prisma.user.create({
+        data: { clerkUserId: userId, email }
+      });
+    }
+
     // Call RAG Service (filtering by research/filing ID if applicable, here we pass it as a filter)
     const answer = await ragService.query(question, { filingId: researchId });
 
     // Store Chat History
     await prisma.chatHistory.create({
       data: {
-        userId,
+        userId: user.id,
         researchId,
         question,
         answer

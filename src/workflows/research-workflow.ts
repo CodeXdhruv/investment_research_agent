@@ -129,12 +129,12 @@ export class ResearchWorkflow {
             summary: finalState.finalReport.reasoning,
             agentOutputs: {
               create: [
-                { agentName: 'finance', output: JSON.stringify(finalState.financeOutput) },
-                { agentName: 'news', output: JSON.stringify(finalState.newsOutput) },
-                { agentName: 'sentiment', output: JSON.stringify(finalState.sentimentOutput) },
-                { agentName: 'industry', output: JSON.stringify(finalState.industryOutput) },
-                { agentName: 'risk', output: JSON.stringify(finalState.riskOutput) },
-                { agentName: 'valuation', output: JSON.stringify(finalState.valuationOutput) }
+                { agentName: 'finance', output: JSON.stringify(finalState.financeOutput) || "{}" },
+                { agentName: 'news', output: JSON.stringify(finalState.newsOutput) || "{}" },
+                { agentName: 'sentiment', output: JSON.stringify(finalState.sentimentOutput) || "{}" },
+                { agentName: 'industry', output: JSON.stringify(finalState.industryOutput) || "{}" },
+                { agentName: 'risk', output: JSON.stringify(finalState.riskOutput) || "{}" },
+                { agentName: 'valuation', output: JSON.stringify(finalState.valuationOutput) || "{}" }
               ]
             }
           }
@@ -145,6 +145,56 @@ export class ResearchWorkflow {
     }
 
     return finalState.finalReport;
+  }
+
+  async *stream(ticker: string, userId?: string) {
+    const initialState = { ticker, data: null };
+    const stream = await compiledResearchGraph.stream(initialState);
+    
+    let finalReport: any = null;
+    let accumulatedState: any = {};
+    for await (const chunk of stream) {
+      if (chunk.finance) { accumulatedState.financeOutput = chunk.finance.financeOutput; yield { type: 'agent', agent: 'finance', output: chunk.finance.financeOutput }; }
+      if (chunk.news) { accumulatedState.newsOutput = chunk.news.newsOutput; yield { type: 'agent', agent: 'news', output: chunk.news.newsOutput }; }
+      if (chunk.sentiment) { accumulatedState.sentimentOutput = chunk.sentiment.sentimentOutput; yield { type: 'agent', agent: 'sentiment', output: chunk.sentiment.sentimentOutput }; }
+      if (chunk.industry) { accumulatedState.industryOutput = chunk.industry.industryOutput; yield { type: 'agent', agent: 'industry', output: chunk.industry.industryOutput }; }
+      if (chunk.risk) { accumulatedState.riskOutput = chunk.risk.riskOutput; yield { type: 'agent', agent: 'risk', output: chunk.risk.riskOutput }; }
+      if (chunk.valuation) { accumulatedState.valuationOutput = chunk.valuation.valuationOutput; yield { type: 'agent', agent: 'valuation', output: chunk.valuation.valuationOutput }; }
+      
+      if (chunk.committee) {
+        accumulatedState.finalReport = chunk.committee.finalReport;
+        finalReport = chunk.committee.finalReport;
+        yield { type: 'final', output: finalReport };
+      }
+    }
+    
+    if (userId && finalReport) {
+      try {
+        await prisma.researchReport.create({
+          data: {
+            userId,
+            company: ticker,
+            ticker,
+            recommendation: finalReport.recommendation || 'UNKNOWN',
+            score: finalReport.score || 0,
+            confidence: finalReport.confidence || 0,
+            summary: finalReport.reasoning || 'No summary available.',
+            agentOutputs: {
+              create: [
+                { agentName: 'finance', output: JSON.stringify(accumulatedState.financeOutput) || "{}" },
+                { agentName: 'news', output: JSON.stringify(accumulatedState.newsOutput) || "{}" },
+                { agentName: 'sentiment', output: JSON.stringify(accumulatedState.sentimentOutput) || "{}" },
+                { agentName: 'industry', output: JSON.stringify(accumulatedState.industryOutput) || "{}" },
+                { agentName: 'risk', output: JSON.stringify(accumulatedState.riskOutput) || "{}" },
+                { agentName: 'valuation', output: JSON.stringify(accumulatedState.valuationOutput) || "{}" }
+              ]
+            }
+          }
+        });
+      } catch (err) {
+        console.error("Failed to store research report", err);
+      }
+    }
   }
 }
 export const researchWorkflow = new ResearchWorkflow();

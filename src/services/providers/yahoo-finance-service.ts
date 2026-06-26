@@ -6,11 +6,14 @@ export class YahooFinanceService {
   async getFinancialData(ticker: string) {
     try {
       const result = await yahooFinance.quoteSummary(ticker, {
-        modules: ['financialData', 'defaultKeyStatistics', 'balanceSheetHistory', 'cashflowStatementHistory']
+        modules: ['financialData', 'defaultKeyStatistics', 'assetProfile', 'balanceSheetHistory', 'cashflowStatementHistory']
       });
       
       const fd = result.financialData;
+      const ap = result.assetProfile;
       return {
+        sector: ap?.sector || 'Unknown',
+        industry: ap?.industry || 'Unknown',
         totalRevenue: fd?.totalRevenue,
         netIncome: fd?.netIncomeToCommon || fd?.ebitda || fd?.grossProfits,
         grossMargins: fd?.grossMargins || fd?.profitMargins || fd?.operatingMargins,
@@ -27,6 +30,8 @@ export class YahooFinanceService {
       try {
         const quote = await yahooFinance.quote(ticker);
         return {
+          sector: 'Unknown',
+          industry: 'Unknown',
           currentPrice: quote.regularMarketPrice,
           change: quote.regularMarketChange,
           changePercent: quote.regularMarketChangePercent

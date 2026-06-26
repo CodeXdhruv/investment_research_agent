@@ -11,7 +11,7 @@ export class NewsApiService {
   async getCompanyNews(ticker: string) {
     if (!this.apiKey) return [{ title: "Good news (No API Key)", url: "https://example.com" }];
     try {
-      const response = await axios.get(`${this.baseUrl}/everything?q=${ticker}&sortBy=publishedAt&pageSize=10&apiKey=${this.apiKey}`);
+      const response = await axios.get(`${this.baseUrl}/everything?q=${ticker}&language=en&sortBy=relevancy&pageSize=3&apiKey=${this.apiKey}`);
       return response.data.articles.map((article: any) => ({
         title: article.title,
         description: article.description,

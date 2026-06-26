@@ -1,5 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
+import { NextResponse } from 'next/server';
+
 const isProtectedRoute = createRouteMatcher([
   '/api/v1/research/history',
   '/api/v1/research/saved',
@@ -10,7 +12,16 @@ const isProtectedRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, req) => {
   if (req.method === 'OPTIONS') {
-    return;
+    const origin = req.headers.get('origin') || 'http://localhost:3000';
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-clerk-auth-reason, x-clerk-auth-status',
+        'Access-Control-Allow-Credentials': 'true',
+      }
+    });
   }
   if (isProtectedRoute(req)) {
     await auth.protect();

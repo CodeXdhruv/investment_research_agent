@@ -88,25 +88,25 @@ researchGraph.addNode("committee", async (state) => {
 });
 
 // Edges
-researchGraph.addEdge(START, "gather_data");
+(researchGraph as any).addEdge(START, "gather_data");
 
 // Parallel execution of agents
-researchGraph.addEdge("gather_data", "finance");
-researchGraph.addEdge("gather_data", "news");
-researchGraph.addEdge("gather_data", "sentiment");
-researchGraph.addEdge("gather_data", "industry");
-researchGraph.addEdge("gather_data", "risk");
-researchGraph.addEdge("gather_data", "valuation");
+(researchGraph as any).addEdge("gather_data", "finance");
+(researchGraph as any).addEdge("gather_data", "news");
+(researchGraph as any).addEdge("gather_data", "sentiment");
+(researchGraph as any).addEdge("gather_data", "industry");
+(researchGraph as any).addEdge("gather_data", "risk");
+(researchGraph as any).addEdge("gather_data", "valuation");
 
-// All agents to committee
-researchGraph.addEdge("finance", "committee");
-researchGraph.addEdge("news", "committee");
-researchGraph.addEdge("sentiment", "committee");
-researchGraph.addEdge("industry", "committee");
-researchGraph.addEdge("risk", "committee");
-researchGraph.addEdge("valuation", "committee");
+// All agents report to committee
+(researchGraph as any).addEdge("finance", "committee");
+(researchGraph as any).addEdge("news", "committee");
+(researchGraph as any).addEdge("sentiment", "committee");
+(researchGraph as any).addEdge("industry", "committee");
+(researchGraph as any).addEdge("risk", "committee");
+(researchGraph as any).addEdge("valuation", "committee");
 
-researchGraph.addEdge("committee", END);
+(researchGraph as any).addEdge("committee", END);
 
 export const compiledResearchGraph = researchGraph.compile();
 
@@ -123,10 +123,10 @@ export class ResearchWorkflow {
             userId,
             company: ticker, // Placeholder: resolve real name via provider
             ticker,
-            recommendation: finalState.finalReport.recommendation,
-            score: finalState.finalReport.score,
-            confidence: finalState.finalReport.confidence,
-            summary: finalState.finalReport.reasoning,
+            recommendation: (finalState.finalReport as any).recommendation,
+            score: (finalState.finalReport as any).score,
+            confidence: (finalState.finalReport as any).confidence,
+            summary: (finalState.finalReport as any).reasoning,
             agentOutputs: {
               create: [
                 { agentName: 'finance', output: JSON.stringify(finalState.financeOutput) || "{}" },
@@ -153,7 +153,8 @@ export class ResearchWorkflow {
     
     let finalReport: any = null;
     let accumulatedState: any = {};
-    for await (const chunk of stream) {
+    for await (const _chunk of stream) {
+      const chunk: any = _chunk;
       if (chunk.finance) { accumulatedState.financeOutput = chunk.finance.financeOutput; yield { type: 'agent', agent: 'finance', output: chunk.finance.financeOutput }; }
       if (chunk.news) { accumulatedState.newsOutput = chunk.news.newsOutput; yield { type: 'agent', agent: 'news', output: chunk.news.newsOutput }; }
       if (chunk.sentiment) { accumulatedState.sentimentOutput = chunk.sentiment.sentimentOutput; yield { type: 'agent', agent: 'sentiment', output: chunk.sentiment.sentimentOutput }; }

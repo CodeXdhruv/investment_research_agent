@@ -60,16 +60,16 @@ debateGraph.addNode("committee", async (state) => ({
   ])
 }));
 
-debateGraph.addEdge(START, "gather_data");
+(debateGraph as any).addEdge(START, "gather_data");
 
-debateGraph.addEdge("gather_data", "bull");
-debateGraph.addEdge("gather_data", "bear");
+(debateGraph as any).addEdge("gather_data", "bull");
+(debateGraph as any).addEdge("gather_data", "bear");
 
-debateGraph.addEdge("bull", "moderator");
-debateGraph.addEdge("bear", "moderator");
+(debateGraph as any).addEdge("bull", "moderator");
+(debateGraph as any).addEdge("bear", "moderator");
 
-debateGraph.addEdge("moderator", "committee");
-debateGraph.addEdge("committee", END);
+(debateGraph as any).addEdge("moderator", "committee");
+(debateGraph as any).addEdge("committee", END);
 
 export const compiledDebateGraph = debateGraph.compile();
 

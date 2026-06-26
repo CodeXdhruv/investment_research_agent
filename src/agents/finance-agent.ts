@@ -7,7 +7,7 @@ const financeOutputSchema = z.object({
   score: z.number().min(0).max(100),
   strengths: z.array(z.string()),
   weaknesses: z.array(z.string()),
-  metrics: z.record(z.any())
+  metrics: z.record(z.string(), z.any())
 });
 
 import { StringOutputParser } from '@langchain/core/output_parsers';

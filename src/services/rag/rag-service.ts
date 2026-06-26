@@ -1,7 +1,7 @@
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { Document } from "@langchain/core/documents";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
@@ -10,7 +10,8 @@ export class RagService {
 
   constructor() {
     this.embeddings = new GoogleGenerativeAIEmbeddings({
-      modelName: "text-embedding-004", // default Gemini embeddings model
+      model: "text-embedding-004", // default Gemini embeddings model
+      apiKey: process.env.GOOGLE_API_KEY || "dummy_key",
     });
   }
 
@@ -50,8 +51,9 @@ export class RagService {
 
       // 2. Gemini Response
       const model = new ChatGoogleGenerativeAI({
-        modelName: "gemini-2.5-flash",
+        model: "gemini-2.5-flash",
         temperature: 0.1,
+        apiKey: process.env.GOOGLE_API_KEY || "dummy_key",
       });
 
       const prompt = PromptTemplate.fromTemplate(`

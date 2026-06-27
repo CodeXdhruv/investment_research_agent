@@ -13,7 +13,7 @@ export async function GET(req: Request) {
 
     const compareData = await compareService.getAdvancedComparison(t1, t2);
 
-    const origin = req.headers.get('origin') || 'http://localhost:3000';
+    const origin = process.env.CORS_ORIGIN || 'http://localhost:3000';
     return NextResponse.json({
       success: true,
       data: compareData
@@ -25,7 +25,7 @@ export async function GET(req: Request) {
     });
   } catch (error: any) {
     console.error('Advanced Compare Route Error:', error);
-    const origin = req.headers.get('origin') || 'http://localhost:3000';
+    const origin = process.env.CORS_ORIGIN || 'http://localhost:3000';
     return NextResponse.json({
       success: false,
       error: { message: error.message }

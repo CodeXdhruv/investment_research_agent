@@ -13,27 +13,23 @@ export async function GET(req: Request) {
 
     const compareData = await compareService.getAdvancedComparison(t1, t2);
 
-    const origin = process.env.CORS_ORIGIN || 'http://localhost:3000';
     return NextResponse.json({
       success: true,
       data: compareData
     }, {
       headers: {
-        'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Origin': '*',
       }
     });
   } catch (error: any) {
     console.error('Advanced Compare Route Error:', error);
-    const origin = process.env.CORS_ORIGIN || 'http://localhost:3000';
     return NextResponse.json({
       success: false,
       error: { message: error.message }
-    }, { 
+    }, {
       status: 500,
       headers: {
-        'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Origin': '*',
       }
     });
   }

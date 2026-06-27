@@ -12,14 +12,12 @@ const isProtectedRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, req) => {
   if (req.method === 'OPTIONS') {
-    const origin = process.env.CORS_ORIGIN || 'http://localhost:3000';
     return new NextResponse(null, {
       status: 200,
       headers: {
-        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-clerk-auth-reason, x-clerk-auth-status',
-        'Access-Control-Allow-Credentials': 'true',
       }
     });
   }

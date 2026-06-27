@@ -24,10 +24,10 @@ class CompareService {
       newsApiService.getCompanyNews(t2).catch(() => [])
     ]);
 
-    const name1 = q1?.name || q1?.companyName || t1;
-    const name2 = q2?.name || q2?.companyName || t2;
-    const p1 = q1?.currentPrice || q1?.price || 100;
-    const p2 = q2?.currentPrice || q2?.price || 200;
+    const name1 = t1;
+    const name2 = t2;
+    const p1 = q1?.currentPrice || 100;
+    const p2 = q2?.currentPrice || 200;
     
     // Sector and Industry Matching
     const sec1 = fin1?.sector || 'Unknown';

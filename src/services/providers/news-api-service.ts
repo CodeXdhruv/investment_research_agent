@@ -19,8 +19,8 @@ export class NewsApiService {
         publishedAt: article.publishedAt,
         source: article.source.name
       }));
-    } catch (e) {
-      console.error("NewsAPI getCompanyNews Error", e);
+    } catch (e: any) {
+      console.error("NewsAPI getCompanyNews Error:", e.message);
       return [];
     }
   }
@@ -36,8 +36,8 @@ export class NewsApiService {
         publishedAt: article.publishedAt,
         source: article.source.name
       }));
-    } catch (e) {
-      console.error("NewsAPI getMarketNews Error", e);
+    } catch (e: any) {
+      console.error("NewsAPI getMarketNews Error:", e.message);
       return [];
     }
   }

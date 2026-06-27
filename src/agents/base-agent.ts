@@ -2,7 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 export const getGeminiModel = (temperature = 0.2) => {
   return new ChatOpenAI({
-    modelName: "openrouter/free",
+    modelName: "google/gemma-2-9b-it:free",
     maxTokens: 4000,
     temperature,
     apiKey: process.env.OPENROUTER_API_KEY || "",

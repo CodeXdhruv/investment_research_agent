@@ -30,6 +30,11 @@ class DashboardService {
     return data;
   }
 
+  private withTimeout<T>(promise: Promise<T>, timeoutMs = 2500, fallback: any = null): Promise<T> {
+    const timeoutPromise = new Promise<T>((resolve) => setTimeout(() => resolve(fallback), timeoutMs));
+    return Promise.race([promise, timeoutPromise]).catch(() => fallback);
+  }
+
   // Deduplicate news based on title similarity/words
   private deduplicateNews(allNews: any[]) {
     const uniqueNews = [];
@@ -58,7 +63,7 @@ class DashboardService {
     const rM = refresh ? 1 + (Math.random() * 0.04 - 0.02) : 1;
     const catOffset = category === 'Overview' ? 0 : category.length * 0.5;
 
-    // Parallel Fetching
+    // Parallel Fetching with Timeouts to ensure blazing fast response
     const [
       marketPulseRaw,
       etfPerformanceRaw,
@@ -70,30 +75,30 @@ class DashboardService {
       ipoCalendarRaw,
       economicCalendarRaw,
       upcomingEarningsRaw,
-      topMoversRaw // We can simulate top movers with trending or if provider supports it
+      topMoversRaw 
     ] = await Promise.all([
       this.getCachedData('marketPulse', 5, () => Promise.all([
-        yahooFinanceService.getQuote('^GSPC').catch(() => null),
-        yahooFinanceService.getQuote('^IXIC').catch(() => null),
-        yahooFinanceService.getQuote('^DJI').catch(() => null),
-        yahooFinanceService.getQuote('^VIX').catch(() => null)
+        this.withTimeout(yahooFinanceService.getQuote('^GSPC')),
+        this.withTimeout(yahooFinanceService.getQuote('^IXIC')),
+        this.withTimeout(yahooFinanceService.getQuote('^DJI')),
+        this.withTimeout(yahooFinanceService.getQuote('^VIX'))
       ]), refresh),
       this.getCachedData('etfPerformance', 5, () => Promise.all([
-        yahooFinanceService.getQuote('SPY').catch(() => null),
-        yahooFinanceService.getQuote('QQQ').catch(() => null),
-        yahooFinanceService.getQuote('SOXX').catch(() => null),
-        yahooFinanceService.getQuote('SMH').catch(() => null),
-        yahooFinanceService.getQuote('VTI').catch(() => null)
+        this.withTimeout(yahooFinanceService.getQuote('SPY')),
+        this.withTimeout(yahooFinanceService.getQuote('QQQ')),
+        this.withTimeout(yahooFinanceService.getQuote('SOXX')),
+        this.withTimeout(yahooFinanceService.getQuote('SMH')),
+        this.withTimeout(yahooFinanceService.getQuote('VTI'))
       ]), refresh),
-      this.getCachedData(`trendingYahoo-${category}`, 10, () => yahooFinanceService.getTrending().catch(() => []), refresh),
-      this.getCachedData(`trendingReddit-${category}`, 10, () => redditApiService.getMarketSentiment(category === 'Overview' ? 'SPY' : category).catch(() => []), refresh), // Fallback
-      this.getCachedData(`marketNews-${category}`, 10, () => category === 'Overview' ? newsApiService.getMarketNews().catch(() => []) : newsApiService.getCompanyNews(category).catch(() => []), refresh),
-      this.getCachedData('sectorPerformance', 10, () => financialModelingPrepService.getSectorPerformance().catch(() => []), refresh),
-      this.getCachedData('sectorHeatmap', 10, () => financialModelingPrepService.getSectorHeatmap().catch(() => []), refresh),
-      this.getCachedData('ipoCalendar', 60, () => financialModelingPrepService.getIpoCalendar().catch(() => []), refresh),
-      this.getCachedData('economicCalendar', 60, () => financialModelingPrepService.getEconomicCalendar().catch(() => []), refresh),
-      this.getCachedData('upcomingEarnings', 60, () => finnhubService.getUpcomingEarnings().catch(() => []), refresh),
-      this.getCachedData('marketBreadth', 5, () => financialModelingPrepService.getMarketBreadth().catch(() => null), refresh)
+      this.getCachedData(`trendingYahoo-${category}`, 10, () => this.withTimeout(yahooFinanceService.getTrending(), 2500, []), refresh),
+      this.getCachedData(`trendingReddit-${category}`, 10, () => this.withTimeout(redditApiService.getMarketSentiment(category === 'Overview' ? 'SPY' : category), 2500, []), refresh), 
+      this.getCachedData(`marketNews-${category}`, 10, () => this.withTimeout(category === 'Overview' ? newsApiService.getMarketNews() : newsApiService.getCompanyNews(category), 2500, []), refresh),
+      this.getCachedData('sectorPerformance', 10, () => this.withTimeout(financialModelingPrepService.getSectorPerformance(), 2500, []), refresh),
+      this.getCachedData('sectorHeatmap', 10, () => this.withTimeout(financialModelingPrepService.getSectorHeatmap(), 2500, []), refresh),
+      this.getCachedData('ipoCalendar', 60, () => this.withTimeout(financialModelingPrepService.getIpoCalendar(), 2500, []), refresh),
+      this.getCachedData('economicCalendar', 60, () => this.withTimeout(financialModelingPrepService.getEconomicCalendar(), 2500, []), refresh),
+      this.getCachedData('upcomingEarnings', 60, () => this.withTimeout(finnhubService.getUpcomingEarnings(), 2500, []), refresh),
+      this.getCachedData('marketBreadth', 5, () => this.withTimeout(financialModelingPrepService.getMarketBreadth(), 2500, null), refresh)
     ]);
 
     // 1. Market Pulse

@@ -36,6 +36,18 @@ export class FinanceAgent {
       cleanJson = cleanJson.replace(/\\(?!"|\\|\/|b|f|n|r|t|u[0-9a-fA-F]{4})/g, "\\\\");
       cleanJson = cleanJson.replace(/,\s*([\]}])/g, "$1");
       
+      // Auto-fix for multiple JSON root objects (often caused by free model hallucinations)
+      if (cleanJson.match(/}\s*\{/g)) {
+        const arrStr = '[' + cleanJson.replace(/}\s*\{/g, '},{') + ']';
+        try {
+          const arr = JSON.parse(arrStr);
+          cleanJson = JSON.stringify(arr[arr.length - 1]);
+        } catch (e) {
+          // Fallback to original string if array parse fails
+        }
+      }
+      
+      
       return await this.parser.parse(cleanJson);
     } catch (e) {
       console.error("FinanceAgent Error", e);

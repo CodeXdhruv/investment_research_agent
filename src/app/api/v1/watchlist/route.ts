@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     let user = await prisma.user.findUnique({ where: { clerkUserId: userId } });
     if (!user) {
       const clerkUser = await currentUser();
-      const email = clerkUser?.emailAddresses[0]?.emailAddress || `${userId}@gmail.com`;
+      const email = clerkUser?.emailAddresses[0]?.emailAddress || `${userId}@placeholder.com`;
       user = await prisma.user.create({
         data: { clerkUserId: userId, email }
       });

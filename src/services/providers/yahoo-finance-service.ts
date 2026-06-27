@@ -80,7 +80,7 @@ export class YahooFinanceService {
     }
   }
 
-  async getQuote(ticker: string) {
+    async getQuote(ticker: string) {
     try {
       const quote = await yahooFinance.quote(ticker);
       return {
@@ -88,7 +88,11 @@ export class YahooFinanceService {
         change: quote.regularMarketChange,
         changePercent: quote.regularMarketChangePercent,
         marketCap: quote.marketCap,
-        volume: quote.regularMarketVolume
+        volume: quote.regularMarketVolume,
+        fiftyTwoWeekHigh: quote.fiftyTwoWeekHigh,
+        fiftyTwoWeekLow: quote.fiftyTwoWeekLow,
+        fiftyDayAverage: quote.fiftyDayAverage,
+        twoHundredDayAverage: quote.twoHundredDayAverage,
       };
     } catch (e) {
       console.error(`YahooFinance getQuote Error for ${ticker}`, e);

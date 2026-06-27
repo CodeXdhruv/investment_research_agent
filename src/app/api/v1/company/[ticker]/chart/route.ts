@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import YahooFinance from 'yahoo-finance2';
-// @ts-ignore
-const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+import yahooFinance from 'yahoo-finance2';
+yahooFinance.suppressNotices(['yahooSurvey']);
 
 export async function GET(req: Request, { params }: { params: Promise<{ ticker: string }> }) {
   try {

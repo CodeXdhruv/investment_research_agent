@@ -30,7 +30,12 @@ export async function GET(req: Request) {
 
     const enrichedWatchlist = await Promise.all(
       watchlistItems.map(async (item) => {
-        const quote = await yahooFinanceService.getQuote(item.ticker);
+        let quote: any = null;
+        try {
+          quote = await yahooFinanceService.getQuote(item.ticker);
+        } catch (error) {
+          console.error(`Failed to fetch quote for ${item.ticker}:`, error);
+        }
         
         let mcapStr = 'N/A';
         if (quote?.marketCap) {

@@ -1,7 +1,8 @@
-import YahooFinance from 'yahoo-finance2';
+import yf from 'yahoo-finance2';
 
-// @ts-ignore
-const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+const YFClass = (yf as any).default || yf;
+const yahooFinance = new YFClass({ suppressNotices: ['yahooSurvey'] });
+
 export class YahooFinanceService {
   async getFinancialData(ticker: string) {
     try {

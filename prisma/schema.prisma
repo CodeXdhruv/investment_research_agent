@@ -5,10 +5,12 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
   provider = "postgresql"
+  extensions = [vector]
 }
 
 model User {
@@ -98,4 +100,11 @@ model ChatHistory {
 
   @@index([userId])
   @@index([researchId])
+}
+
+model Document {
+  id        String                 @id @default(uuid())
+  content   String
+  metadata  Json
+  embedding Unsupported("vector(768)")?
 }

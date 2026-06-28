@@ -6,7 +6,7 @@ import ws from 'ws';
 neonConfig.webSocketConstructor = ws;
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+  prisma_new: PrismaClient | undefined
 };
 
 const getDbUrl = () => {
@@ -19,6 +19,6 @@ if (!connectionString) throw new Error("DATABASE_URL is not set");
 // Prisma 7+ fix: PrismaNeon is a factory that takes a config object, NOT a Pool instance.
 const adapter = new PrismaNeon({ connectionString });
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
+export const prisma = globalForPrisma.prisma_new ?? new PrismaClient({ adapter });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma_new = prisma;

@@ -11,9 +11,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
     const { id } = await params;
     
-    const report = await prisma.researchReport.findUnique({
-      where: { id, userId },
-      include: { agentOutputs: true }
+    const report = await prisma.analysisJob.findFirst({
+      where: { id, user: { clerkUserId: userId } }
     });
 
     if (!report) {

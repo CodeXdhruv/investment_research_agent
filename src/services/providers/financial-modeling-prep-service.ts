@@ -77,10 +77,9 @@ export class FinancialModelingPrepService {
   async getMarketBreadth() {
     if (!this.apiKey) return null;
     try {
-      // FMP doesn't have a direct "market breadth" endpoint in basic tier usually, 
-      // but we can query stock market actives or market index
-      const response = await axios.get(`${this.baseUrl}/stock_market/actives?apikey=${this.apiKey}`);
-      return response.data;
+      // FMP has deprecated the /stock_market/actives endpoint for free tier users.
+      // We return null and let the dashboard-service use its robust fallback.
+      return null;
     } catch (e) {
       console.error("FMP getMarketBreadth Error", e);
       return null;

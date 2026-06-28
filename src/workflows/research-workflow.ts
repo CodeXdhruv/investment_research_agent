@@ -11,35 +11,34 @@ export class ResearchWorkflow {
     // 1. Check Cache (24-hour stale time)
     if (false && userId) { // Temporarily bypassed to clear out old schema data
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const cachedReport = await prisma.researchReport.findFirst({
+      const cachedJob = await prisma.analysisJob.findFirst({
         where: {
           ticker,
           userId,
+          jobType: 'RESEARCH',
           updatedAt: { gte: twentyFourHoursAgo }
-        },
-        include: { agentOutputs: true }
+        }
       });
 
-      if (cachedReport) {
-        console.log(`[CACHE HIT] Using cached report for ${ticker}`);
+      if (cachedJob) {
+        console.log(`[CACHE HIT] Using cached job for ${ticker}`);
+        const cj = cachedJob;
+        const agents: any = cj.agentOutputs || {};
+        const metrics: any = cj.coreMetrics || {};
         
-        const outputs = cachedReport.agentOutputs.reduce((acc: any, curr: any) => {
-          try {
-            acc[`${curr.agentName}Output`] = JSON.parse(curr.output);
-          } catch (e) {
-            acc[`${curr.agentName}Output`] = {};
-          }
-          return acc;
-        }, {});
-
         return {
           finalReport: {
-            recommendation: cachedReport.recommendation,
-            score: cachedReport.score,
-            confidence: cachedReport.confidence,
-            reasoning: cachedReport.summary
+            recommendation: metrics.recommendation,
+            score: metrics.score,
+            confidence: metrics.confidence,
+            reasoning: cj.summary
           },
-          ...outputs
+          financeOutput: agents.finance || {},
+          newsOutput: agents.news || {},
+          sentimentOutput: agents.sentiment || {},
+          industryOutput: agents.industry || {},
+          riskOutput: agents.risk || {},
+          valuationOutput: agents.valuation || {}
         };
       }
     }
@@ -66,7 +65,7 @@ export class ResearchWorkflow {
       valuation: valuation ? { peRatio: valuation.peRatio, priceToBook: valuation.priceToBook } : null,
       industry: profile ? { name: profile.name, marketCapitalization: profile.marketCapitalization } : null,
       news: news?.slice(0, 2).map((n: any) => ({ title: n.title })) || [],
-      sentiment: sentiment?.slice(0, 2) || [],
+      sentiment: sentiment?.posts?.slice(0, 2) || [],
       risk: { filings: filings?.slice(0, 2).map((f: any) => f.type) },
     };
 
@@ -77,24 +76,24 @@ export class ResearchWorkflow {
     // 4. Store in DB
     if (userId) {
       try {
-        await prisma.researchReport.create({
+        await prisma.analysisJob.create({
           data: {
             userId,
-            company: ticker, // Placeholder
             ticker,
-            recommendation: result.finalReport.recommendation,
-            score: result.finalReport.score,
-            confidence: result.finalReport.confidence,
+            jobType: 'RESEARCH',
             summary: result.finalReport.reasoning,
+            coreMetrics: {
+              recommendation: result.finalReport.recommendation,
+              score: result.finalReport.score,
+              confidence: result.finalReport.confidence
+            },
             agentOutputs: {
-              create: [
-                { agentName: 'finance', output: JSON.stringify(result.financeOutput) || "{}" },
-                { agentName: 'news', output: JSON.stringify(result.newsOutput) || "{}" },
-                { agentName: 'sentiment', output: JSON.stringify(result.sentimentOutput) || "{}" },
-                { agentName: 'industry', output: JSON.stringify(result.industryOutput) || "{}" },
-                { agentName: 'risk', output: JSON.stringify(result.riskOutput) || "{}" },
-                { agentName: 'valuation', output: JSON.stringify(result.valuationOutput) || "{}" }
-              ]
+              finance: result.financeOutput || {},
+              news: result.newsOutput || {},
+              sentiment: result.sentimentOutput || {},
+              industry: result.industryOutput || {},
+              risk: result.riskOutput || {},
+              valuation: result.valuationOutput || {}
             }
           }
         });

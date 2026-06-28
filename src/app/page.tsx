@@ -1,18 +1,15 @@
 export default function Home() {
   const endpoints = [
-    { method: 'POST', path: '/api/v1/research/start', desc: 'Start company research and generate full report' },
+    { method: 'POST', path: '/api/v1/research/start', desc: 'Start company research and generate full report (stream supported)' },
     { method: 'GET', path: '/api/v1/research/:id', desc: 'Get a completed research report by ID' },
     { method: 'GET', path: '/api/v1/company/:ticker', desc: 'Get company profile, financials, and peers' },
-    { method: 'POST', path: '/api/v1/compare', desc: 'Compare multiple companies and generate a matrix' },
+    { method: 'GET', path: '/api/v1/company/:ticker/chart', desc: 'Get historical chart data' },
+    { method: 'GET', path: '/api/v1/compare', desc: 'Compare multiple companies (advanced mode supported)' },
     { method: 'POST', path: '/api/v1/debate', desc: 'Run a Bull vs Bear AI debate for a ticker' },
-    { method: 'GET', path: '/api/v1/discover', desc: 'Scan the market and discover investment opportunities' },
     { method: 'GET', path: '/api/v1/watchlist', desc: "Get the current user's watchlist" },
-    { method: 'POST', path: '/api/v1/watchlist', desc: 'Add a ticker to the watchlist' },
-    { method: 'DELETE', path: '/api/v1/watchlist/:ticker', desc: 'Remove a ticker from the watchlist' },
+    { method: 'POST', path: '/api/v1/watchlist', desc: 'Toggle a ticker in the watchlist' },
     { method: 'POST', path: '/api/v1/chat', desc: 'Chat with the RAG system regarding a research report' },
-    { method: 'GET', path: '/api/v1/market/trending', desc: 'Get currently trending market symbols' },
-    { method: 'GET', path: '/api/v1/market/mood', desc: 'Get general market sentiment from Reddit' },
-    { method: 'GET', path: '/api/v1/market/dashboard', desc: 'Get aggregated data for Market Insights Dashboard' },
+    { method: 'GET', path: '/api/v1/market/overview', desc: 'Get unified market insights, mood, trending, and discovery data' },
   ];
 
   return (

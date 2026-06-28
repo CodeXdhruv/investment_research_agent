@@ -7,7 +7,7 @@ export class YahooFinanceService {
   async getFinancialData(ticker: string) {
     try {
       const result = await yahooFinance.quoteSummary(ticker, {
-        modules: ['financialData', 'defaultKeyStatistics', 'assetProfile', 'balanceSheetHistory', 'cashflowStatementHistory']
+        modules: ['financialData', 'defaultKeyStatistics', 'assetProfile']
       });
       
       const fd = result.financialData;
@@ -74,7 +74,7 @@ export class YahooFinanceService {
   async getTrending() {
     try {
       const result = await yahooFinance.trendingSymbols('US');
-      return result.quotes.map(q => q.symbol);
+      return result.quotes.map((q: any) => q.symbol);
     } catch (e) {
       console.error("Yahoo Finance getTrending Error", e);
       return [];

@@ -80,14 +80,17 @@ export class DebateWorkflow {
     
     if (userId) {
       try {
-        await prisma.debate.create({
+        await prisma.analysisJob.create({
           data: {
             userId,
             ticker,
-            bullOutput: JSON.stringify(finalState.bullOutput),
-            bearOutput: JSON.stringify(finalState.bearOutput),
-            moderatorOutput: JSON.stringify(finalState.moderatorSummary),
-            committeeOutput: JSON.stringify(finalState.committeeDecision)
+            jobType: 'DEBATE',
+            debateLog: {
+              bull: finalState.bullOutput || {},
+              bear: finalState.bearOutput || {},
+              moderator: finalState.moderatorSummary || {},
+              committee: finalState.committeeDecision || {}
+            }
           }
         });
       } catch (e) {

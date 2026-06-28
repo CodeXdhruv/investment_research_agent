@@ -24,6 +24,18 @@ export async function GET(req: Request) {
     if (!tickersParam) {
       return NextResponse.json({ success: false, error: { code: 'BAD_REQUEST', message: "Tickers query parameter is required" } }, { status: 400 });
     }
+    const mode = url.searchParams.get('mode');
+    
+    if (mode === 'advanced') {
+      const tickersArr = tickersParam.split(',').map(t => t.trim().toUpperCase()).filter(t => t);
+      if (tickersArr.length < 2) {
+        return NextResponse.json({ success: false, error: { code: 'BAD_REQUEST', message: "Need 2 tickers for advanced compare" } }, { status: 400 });
+      }
+      const { compareService } = await import('../../../../services/compare-service');
+      const compareData = await compareService.getAdvancedComparison(tickersArr[0], tickersArr[1]);
+      return NextResponse.json({ success: true, data: compareData }, { headers: { 'Access-Control-Allow-Origin': '*' } });
+    }
+
     
     const tickers = tickersParam.split(',').map(t => t.trim().toUpperCase()).filter(t => t);
     

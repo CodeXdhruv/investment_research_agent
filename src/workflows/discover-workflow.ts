@@ -11,9 +11,10 @@ export class DiscoverWorkflow {
     // 1. Market Scanner
     // Fetch trending tickers from Yahoo Finance
     const trending = await yahooFinanceService.getTrending();
-    const candidates = trending.length > 0 ? trending.slice(0, 3) : ["NVDA", "AMD", "TSM"]; 
+    const filteredTrending = trending.filter((t: string) => !t.includes('-USD') && !t.startsWith('^'));
+    const candidates = filteredTrending.length > 0 ? filteredTrending.slice(0, 3) : ["NVDA", "AMD", "TSM"]; 
     
-    const results = await Promise.all(candidates.map(async (ticker) => {
+    const results = await Promise.all(candidates.map(async (ticker: string) => {
       // 2. Gather Data
       const [financials, valuationData, profile] = await Promise.all([
         yahooFinanceService.getFinancialData(ticker),

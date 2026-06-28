@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
@@ -14,92 +12,38 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(uuid())
-  clerkUserId String   @unique
-  email       String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String   @id @default(uuid())
+  clerkUserId      String   @unique
+  email            String   @unique
+  watchlistTickers String[] @default([])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  reports     ResearchReport[]
-  debates     Debate[]
-  watchlists  Watchlist[]
-  chats       ChatHistory[]
+  jobs             AnalysisJob[]
 }
 
-model ResearchReport {
-  id             String   @id @default(uuid())
-  userId         String
-  company        String
-  ticker         String
-  recommendation String?
-  score          Float?
-  confidence     Float?
-  summary        String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+enum JobType {
+  RESEARCH
+  DEBATE
+}
 
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  agentOutputs   AgentOutput[]
-  chats          ChatHistory[]
+model AnalysisJob {
+  id           String   @id @default(uuid())
+  userId       String
+  ticker       String
+  jobType      JobType  @default(RESEARCH)
+  summary      String?
+  coreMetrics  Json?
+  agentOutputs Json?
+  debateLog    Json?
+  chatHistory  Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([ticker])
-}
-
-model AgentOutput {
-  id         String   @id @default(uuid())
-  researchId String
-  agentName  String
-  score      Float?
-  output     String // Store as JSON string or text depending on needs
-  createdAt  DateTime @default(now())
-
-  report     ResearchReport @relation(fields: [researchId], references: [id], onDelete: Cascade)
-
-  @@index([researchId])
-}
-
-model Debate {
-  id              String   @id @default(uuid())
-  userId          String
-  ticker          String
-  bullOutput      String
-  bearOutput      String
-  moderatorOutput String
-  committeeOutput String
-  createdAt       DateTime @default(now())
-
-  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([ticker])
-}
-
-model Watchlist {
-  id        String   @id @default(uuid())
-  userId    String
-  ticker    String
-  createdAt DateTime @default(now())
-
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, ticker])
-  @@index([userId])
-}
-
-model ChatHistory {
-  id         String   @id @default(uuid())
-  userId     String
-  researchId String
-  question   String
-  answer     String
-  createdAt  DateTime @default(now())
-
-  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  report     ResearchReport @relation(fields: [researchId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([researchId])
 }
 
 model Document {

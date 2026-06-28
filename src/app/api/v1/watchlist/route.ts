@@ -7,6 +7,9 @@ import { NewsApiService } from '../../../../services/providers/news-api-service'
 
 const newsApiService = new NewsApiService();
 
+const watchlistCache = new Map<string, { data: any, timestamp: number }>();
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
 export async function GET(req: Request) {
   try {
     const { userId } = await auth();
@@ -23,18 +26,19 @@ export async function GET(req: Request) {
       });
     }
 
-    const watchlistItems = await prisma.watchlist.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' }
-    });
+    const watchlistItems = user.watchlistTickers || [];
 
     const enrichedWatchlist = await Promise.all(
-      watchlistItems.map(async (item) => {
+      watchlistItems.map(async (ticker) => {
+        const cached = watchlistCache.get(ticker);
+        if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+          return cached.data;
+        }
         let quote: any = null;
         try {
-          quote = await yahooFinanceService.getQuote(item.ticker);
+          quote = await yahooFinanceService.getQuote(ticker);
         } catch (error) {
-          console.error(`Failed to fetch quote for ${item.ticker}:`, error);
+          console.error(`Failed to fetch quote for ${ticker}:`, error);
         }
         
         let mcapStr = 'N/A';
@@ -85,7 +89,7 @@ export async function GET(req: Request) {
           const oneYearAgo = new Date();
           oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
           
-          const hist = await yahooFinanceService.getHistoricalPrices(item.ticker, oneYearAgo.toISOString().split('T')[0]);
+          const hist = await yahooFinanceService.getHistoricalPrices(ticker, oneYearAgo.toISOString().split('T')[0]);
           if (hist && hist.length > 0) {
             const currentP = quote?.currentPrice || hist[hist.length - 1].close;
             const oneYearP = hist[0].close;
@@ -104,7 +108,7 @@ export async function GET(req: Request) {
 
         let newsCrux = "";
         try {
-          const articles = await newsApiService.getCompanyNews(item.ticker, true);
+          const articles = await newsApiService.getCompanyNews(ticker, true);
           if (articles && articles.length > 0 && articles[0].title) {
              newsCrux = `News: ${articles[0].title}. `;
           }
@@ -112,10 +116,10 @@ export async function GET(req: Request) {
 
         const finalReasoning = `${newsCrux}Technical: ${reasoning}`;
 
-        return {
-          id: item.id,
-          ticker: item.ticker,
-          name: item.ticker,
+        const enrichedData = {
+          id: ticker,
+          ticker: ticker,
+          name: ticker,
           price: quote?.currentPrice || 0,
           today: quote?.changePercent || 0,
           ytd: ytdChange,
@@ -123,8 +127,11 @@ export async function GET(req: Request) {
           verdict: verdict,
           reasoning: finalReasoning,
           mcap: mcapStr,
-          added: item.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          added: 'Today'
         };
+
+        watchlistCache.set(ticker, { data: enrichedData, timestamp: Date.now() });
+        return enrichedData;
       })
     );
 
@@ -155,20 +162,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: { code: 'BAD_REQUEST', message: "Ticker is required" } }, { status: 400 });
     }
 
-    const existing = await prisma.watchlist.findFirst({
-      where: { userId: user.id, ticker }
-    });
+    const currentTickers = user.watchlistTickers || [];
+    const existingIndex = currentTickers.indexOf(ticker);
 
-    if (existing) {
-      await prisma.watchlist.delete({ where: { id: existing.id } });
+    if (existingIndex > -1) {
+      // Remove it
+      const updatedTickers = currentTickers.filter((t: string) => t !== ticker);
+      await prisma.user.update({ where: { id: user.id }, data: { watchlistTickers: { set: updatedTickers } } });
       return NextResponse.json({ success: true, added: false });
     } else {
-      const watchlistItem = await prisma.watchlist.create({
-        data: { userId: user.id, ticker }
-      });
+      // Add it
+      const updatedTickers = [...currentTickers, ticker];
+      await prisma.user.update({ where: { id: user.id }, data: { watchlistTickers: { set: updatedTickers } } });
       return NextResponse.json({ success: true, added: true });
     }
   } catch (error: any) {
+    console.error("CRITICAL POST WATCHLIST ERROR:", error);
     return NextResponse.json({ success: false, error: { code: 'INTERNAL_ERROR', message: error.message } }, { status: 500 });
   }
 }

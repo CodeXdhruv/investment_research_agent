@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🧠 StocksForge AI Engine (Backend API)
 
-## Getting Started
+**GitHub Repository:** [https://github.com/CodeXdhruv/investment_research_agent](https://github.com/CodeXdhruv/investment_research_agent)
 
-First, run the development server:
+Welcome to the core backend repository for **StocksForge**. This is a decoupled Next.js API ecosystem that orchestrates financial data aggregation and drives the LangChain Multi-Agent AI workflows.
+
+## 🏗️ Core Architecture
+
+Rather than relying on standard LLM single-prompt bias, this engine utilizes a **Multi-Agent Debate Mechanism**. It spawns isolated `Bull` and `Bear` agents that parse real-time financial data concurrently. Their inherently biased arguments are then synthesized by a `Master` agent to determine a highly accurate, unbiased "Fair Value" for any given equity.
+
+## 🚀 Technology Stack
+
+*   **Runtime:** Node.js / Next.js Serverless API Routes (`/api/v1/...`)
+*   **Database:** Neon Serverless PostgreSQL
+*   **ORM:** Prisma (with `pgvector` support)
+*   **AI Orchestration:** LangChain (TypeScript SDK)
+*   **LLM Engine:** Gemma 4 Model
+*   **Data Providers:** Finnhub, Financial Modeling Prep (FMP), Reddit API
+
+## ⚙️ Quick Start Setup
+
+You must configure your `.env` and `.env.local` files with the necessary API keys (Neon Postgres string, Clerk Secret, Finnhub, FMP, and Gemma 4) before initializing.
 
 ```bash
+# 1. Install dependencies
+npm install
+
+# 2. Initialize and sync the database schema
+npx prisma generate
+npx prisma db push
+
+# 3. Run the backend development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The backend API server runs on `http://localhost:3001` by default.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛡️ Smart Optimizations
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This API is highly hardened against severe rate-limits:
+*   **Promise Deduplication (The Thundering Herd Fix):** Prevents redundant external API calls during high-concurrency user spikes, locking inflight promises so 50 users only trigger 1 API call.
+*   **TTL Caching:** Implements an in-memory Time-to-Live caching layer with graceful degradation (fallback to stale data) to prevent UI crashes during provider outages.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+*For a comprehensive breakdown of the entire architecture, database schemas, and AI workflows, please refer to the `detailed_technical_report.md` in the root workspace.*

@@ -1,17 +1,10 @@
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 export const getGeminiModel = (temperature = 0.2) => {
-  return new ChatOpenAI({
-    modelName: "google/gemma-2-9b-it:free",
-    maxTokens: 4000,
+  return new ChatGoogleGenerativeAI({
+    model: "gemma-4-31b-it",
+    maxOutputTokens: 8192,
     temperature,
-    apiKey: process.env.OPENROUTER_API_KEY || "",
-    configuration: {
-      baseURL: "https://openrouter.ai/api/v1",
-      defaultHeaders: {
-        "HTTP-Referer": "http://localhost:3000",
-        "X-Title": "Investment Research Agent",
-      }
-    }
+    apiKey: process.env.GEMINI_API_KEY || "", // Assume user sets GEMINI_API_KEY
   });
 };

@@ -64,7 +64,8 @@ export class YahooFinanceService {
 
   async getHistoricalPrices(ticker: string, period1: string) {
     try {
-      return await yahooFinance.historical(ticker, { period1 });
+      const p2 = new Date();
+      return await yahooFinance.historical(ticker, { period1, period2: p2 });
     } catch (e) {
       console.error("Yahoo Finance getHistoricalPrices Error", e);
       return [];
@@ -84,16 +85,17 @@ export class YahooFinanceService {
     async getQuote(ticker: string) {
     try {
       const quote = await yahooFinance.quote(ticker);
+      if (!quote) return null;
       return {
-        currentPrice: quote.regularMarketPrice,
-        change: quote.regularMarketChange,
-        changePercent: quote.regularMarketChangePercent,
-        marketCap: quote.marketCap,
-        volume: quote.regularMarketVolume,
-        fiftyTwoWeekHigh: quote.fiftyTwoWeekHigh,
-        fiftyTwoWeekLow: quote.fiftyTwoWeekLow,
-        fiftyDayAverage: quote.fiftyDayAverage,
-        twoHundredDayAverage: quote.twoHundredDayAverage,
+        currentPrice: quote?.regularMarketPrice,
+        change: quote?.regularMarketChange,
+        changePercent: quote?.regularMarketChangePercent,
+        marketCap: quote?.marketCap,
+        volume: quote?.regularMarketVolume,
+        fiftyTwoWeekHigh: quote?.fiftyTwoWeekHigh,
+        fiftyTwoWeekLow: quote?.fiftyTwoWeekLow,
+        fiftyDayAverage: quote?.fiftyDayAverage,
+        twoHundredDayAverage: quote?.twoHundredDayAverage,
       };
     } catch (e) {
       console.error(`YahooFinance getQuote Error for ${ticker}`, e);

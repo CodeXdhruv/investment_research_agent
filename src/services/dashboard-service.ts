@@ -76,7 +76,7 @@ class DashboardService {
       economicCalendarRaw,
       upcomingEarningsRaw,
       topMoversRaw 
-    ] = await Promise.all([
+    ]: any[] = await Promise.all([
       this.getCachedData('marketPulse', 5, () => Promise.all([
         this.withTimeout(yahooFinanceService.getQuote('^GSPC')),
         this.withTimeout(yahooFinanceService.getQuote('^IXIC')),
@@ -95,8 +95,8 @@ class DashboardService {
       this.getCachedData(`marketNews-${category}`, 10, () => this.withTimeout(category === 'Overview' ? newsApiService.getMarketNews() : newsApiService.getCompanyNews(category), 2500, []), refresh),
       this.getCachedData('sectorPerformance', 10, () => this.withTimeout(financialModelingPrepService.getSectorPerformance(), 2500, []), refresh),
       this.getCachedData('sectorHeatmap', 10, () => this.withTimeout(financialModelingPrepService.getSectorHeatmap(), 2500, []), refresh),
-      this.getCachedData('ipoCalendar', 60, () => this.withTimeout(financialModelingPrepService.getIpoCalendar(), 2500, []), refresh),
-      this.getCachedData('economicCalendar', 60, () => this.withTimeout(financialModelingPrepService.getEconomicCalendar(), 2500, []), refresh),
+      this.getCachedData('ipoCalendar', 60, () => this.withTimeout(finnhubService.getIpoCalendar(), 2500, []), refresh),
+      this.getCachedData('economicCalendar', 60, () => this.withTimeout(finnhubService.getEconomicCalendar(), 2500, []), refresh),
       this.getCachedData('upcomingEarnings', 60, () => this.withTimeout(finnhubService.getUpcomingEarnings(), 2500, []), refresh),
       this.getCachedData('marketBreadth', 5, () => this.withTimeout(financialModelingPrepService.getMarketBreadth(), 2500, null), refresh)
     ]);

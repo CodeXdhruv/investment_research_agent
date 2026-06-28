@@ -23,15 +23,15 @@ export class ResearchWorkflow {
       if (cachedJob) {
         console.log(`[CACHE HIT] Using cached job for ${ticker}`);
         const cj = cachedJob;
-        const agents: any = cj.agentOutputs || {};
-        const metrics: any = cj.coreMetrics || {};
+        const agents: any = cj?.agentOutputs || {};
+        const metrics: any = cj?.coreMetrics || {};
         
         return {
           finalReport: {
             recommendation: metrics.recommendation,
             score: metrics.score,
             confidence: metrics.confidence,
-            reasoning: cj.summary
+            reasoning: cj?.summary || "No summary available"
           },
           financeOutput: agents.finance || {},
           newsOutput: agents.news || {},

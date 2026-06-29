@@ -1,29 +1,37 @@
 import axios from 'axios';
 
 export class RedditApiService {
-  async getMarketSentiment(ticker: string) {
+  async getMarketSentiment(category: string) {
     try {
-      // We use StockTwits as a drop-in replacement for Reddit since Reddit blocks unauthenticated API calls
-      const response = await axios.get(`https://api.stocktwits.com/api/2/streams/symbol/${ticker}.json`, {
+      let sub = 'wallstreetbets';
+      if (category === 'Technology' || category === 'Semiconductors' || category === 'AI') sub = 'technology';
+      else if (category === 'Crypto') sub = 'CryptoCurrency';
+      else if (category === 'Finance' || category === 'Macro') sub = 'economy';
+      
+      const response = await axios.get(`https://www.reddit.com/r/${sub}/hot.json?limit=15`, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          'User-Agent': 'StocksForge/1.0.0'
         }
       });
       
-      const posts = response.data.messages.map((m: any) => m.body);
+      const rawPosts = response.data.data.children.map((child: any) => child.data);
       
-      return { 
-        posts: posts.slice(0, 10), // Limit to 10 posts
-      };
+      const posts = rawPosts.map((post: any) => {
+        const match = post.title.match(/\b([A-Z]{2,5})\b/);
+        const ticker = match ? match[1] : (sub === 'wallstreetbets' ? 'SPY' : sub.substring(0,4).toUpperCase());
+        
+        return {
+          body: post.title,
+          ticker: ticker,
+          no_of_comments: post.num_comments || 0,
+          sentiment: post.ups > 500 ? 'Bullish' : 'Bearish'
+        };
+      });
+      
+      return { posts: posts.slice(0, 10) };
     } catch (e: any) {
-      console.error("Sentiment API Error:", e.message || e);
-      return { 
-        posts: [
-          `Bullish on ${ticker}, they just announced great earnings!`,
-          `I think ${ticker} is overvalued right now, might buy puts.`,
-          `${ticker} long term hold, solid fundamentals and growth potential.`
-        ] 
-      };
+      console.error("Reddit API Error:", e.message || e);
+      return { posts: [] };
     }
   }
 }

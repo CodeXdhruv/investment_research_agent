@@ -68,25 +68,24 @@ export class FinnhubService {
   }
 
   async getEconomicCalendar() {
-    if (!this.apiKey) return [];
     try {
-      const response = await axios.get(`${this.baseUrl}/calendar/economic?token=${this.apiKey}`);
-      const eco = response.data.economicCalendar || [];
-      // Filter for next 7 days in the US
+      const response = await axios.get(`https://nfs.faireconomy.media/ff_calendar_thisweek.json`);
+      const eco = response.data || [];
       const today = new Date().toISOString();
       const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      
       return eco
-        .filter((e: any) => e.country === 'US' && e.time >= today && e.time <= nextWeek)
+        .filter((e: any) => e.country === 'USD' && e.date >= today && e.date <= nextWeek)
         .slice(0, 10)
         .map((e: any) => ({
-          date: e.time,
-          event: e.event,
-          country: e.country,
-          consensus: e.estimate,
-          actual: e.actual
+          date: e.date,
+          event: e.title,
+          country: 'US',
+          consensus: e.forecast || e.previous || 'N/A',
+          actual: null
         }));
     } catch (e) {
-      console.error("Finnhub getEconomicCalendar Error", e);
+      console.error("ForexFactory getEconomicCalendar Error", e);
       return [];
     }
   }

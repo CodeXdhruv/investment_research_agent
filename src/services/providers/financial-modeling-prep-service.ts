@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { yahooFinanceService } from './yahoo-finance-service';
 
 export class FinancialModelingPrepService {
   private apiKey: string;
@@ -9,51 +10,52 @@ export class FinancialModelingPrepService {
   }
 
   async getSectorPerformance() {
-    // FMP has deprecated this endpoint. Using realistic mock data to prevent 403 crashes.
-    return [
-      { sector: "Information Technology", changesPercentage: 1.25 },
-      { sector: "Communication Services", changesPercentage: 0.80 },
-      { sector: "Consumer Discretionary", changesPercentage: 0.45 },
-      { sector: "Financials", changesPercentage: -0.15 },
-      { sector: "Health Care", changesPercentage: -0.30 },
-      { sector: "Industrials", changesPercentage: -0.55 },
-      { sector: "Consumer Staples", changesPercentage: -0.85 },
-      { sector: "Energy", changesPercentage: -1.10 },
-      { sector: "Utilities", changesPercentage: -1.25 },
-      { sector: "Real Estate", changesPercentage: -1.50 },
-      { sector: "Materials", changesPercentage: -1.80 }
-    ];
+    try {
+      const etfs = [
+        { symbol: 'XLK', sector: 'Information Technology' },
+        { symbol: 'XLV', sector: 'Health Care' },
+        { symbol: 'XLF', sector: 'Financials' },
+        { symbol: 'XLE', sector: 'Energy' },
+        { symbol: 'XLY', sector: 'Consumer Discretionary' },
+        { symbol: 'XLP', sector: 'Consumer Staples' },
+        { symbol: 'XLI', sector: 'Industrials' },
+        { symbol: 'XLB', sector: 'Materials' },
+        { symbol: 'XLU', sector: 'Utilities' },
+        { symbol: 'XLRE', sector: 'Real Estate' },
+        { symbol: 'XLC', sector: 'Communication Services' }
+      ];
+      
+      const promises = etfs.map(e => yahooFinanceService.getQuote(e.symbol));
+      const quotes = await Promise.all(promises);
+      
+      return etfs.map((e, i) => ({
+        sector: e.sector,
+        changesPercentage: quotes[i]?.changePercent || 0
+      })).sort((a, b) => b.changesPercentage - a.changesPercentage);
+    } catch (e) {
+      console.error("Error fetching sector performance:", e);
+      return [];
+    }
   }
 
   async getSectorHeatmap() {
-    // FMP has deprecated this endpoint. Using realistic mock data to prevent 403 crashes.
-    return [
-      { sector: "Technology", changesPercentage: 1.25 },
-      { sector: "Services", changesPercentage: 0.80 },
-      { sector: "Financial", changesPercentage: -0.15 },
-      { sector: "Healthcare", changesPercentage: -0.30 },
-      { sector: "Industrial Goods", changesPercentage: -0.55 },
-      { sector: "Consumer Goods", changesPercentage: -0.85 },
-      { sector: "Basic Materials", changesPercentage: -1.80 },
-      { sector: "Utilities", changesPercentage: -1.25 }
-    ];
+    try {
+      const performance = await this.getSectorPerformance();
+      return performance.map(s => ({
+        sector: s.sector.replace('Information Technology', 'Technology').replace('Communication Services', 'Services'),
+        changesPercentage: s.changesPercentage
+      }));
+    } catch (e) {
+      return [];
+    }
   }
 
   async getIpoCalendar() {
-    // FMP has locked this v3 endpoint. Return realistic mock data to prevent 403 crashes.
-    return [
-      { date: "2026-07-01", company: "TechNova Inc.", symbol: "TNOV", price: "25.00", exchange: "NASDAQ" },
-      { date: "2026-07-05", company: "EcoGen Energy", symbol: "ECG", price: "18.50", exchange: "NYSE" }
-    ];
+    return [];
   }
 
   async getEconomicCalendar() {
-    // FMP has locked this v3 endpoint. Return realistic mock data to prevent 403 crashes.
-    return [
-      { date: "2026-06-30 08:30:00", event: "GDP Growth Rate QoQ Final", country: "US", consensus: 2.1, actual: null },
-      { date: "2026-07-01 10:00:00", event: "ISM Manufacturing PMI", country: "US", consensus: 48.5, actual: null },
-      { date: "2026-07-03 08:30:00", event: "Non Farm Payrolls", country: "US", consensus: 185000, actual: null }
-    ];
+    return [];
   }
 
   async getMarketBreadth() {

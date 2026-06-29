@@ -10,16 +10,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ ticker: 
     const url = new URL(req.url);
     const interval = url.searchParams.get('interval') || '5m';
     const range = url.searchParams.get('range');
-    const period1 = url.searchParams.get('period1') || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-    let p1 = period1;
-    if (range) {
-      if (range === '1d') p1 = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      else if (range === '5d') p1 = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
-      else if (range === '1mo') p1 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-      else p1 = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    let chartOptions: any = { interval: interval as any };
+    
+    if (url.searchParams.get('period1')) {
+      chartOptions.period1 = url.searchParams.get('period1');
+    } else if (range) {
+      chartOptions.range = range;
+    } else {
+      chartOptions.range = '1d';
     }
-    const chartOptions: any = { interval: interval as any, period1: p1 };
 
     const result = await yahooFinance.chart(ticker, chartOptions);
     

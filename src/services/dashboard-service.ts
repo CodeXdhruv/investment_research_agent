@@ -117,36 +117,17 @@ class DashboardService {
       status: fearGreedValue >= 75 ? 'Extreme Greed' : fearGreedValue >= 55 ? 'Greed' : fearGreedValue >= 45 ? 'Neutral' : fearGreedValue >= 25 ? 'Fear' : 'Extreme Fear'
     };
 
-    // 3. Top Sectors (with fallback)
     const topSectors = sectorPerformanceRaw && sectorPerformanceRaw.length > 0 ? sectorPerformanceRaw.map((s: any) => ({
       name: s.sector,
       changePercent: s.changesPercentage * rM
-    })).slice(0, 7) : [
-      { name: "Technology", changePercent: (1.45 + catOffset) * rM },
-      { name: "Healthcare", changePercent: (0.85 + (catOffset*0.2)) * rM },
-      { name: "Financials", changePercent: (0.32 + (catOffset*0.1)) * rM },
-      { name: "Consumer Discretionary", changePercent: (-0.12 - catOffset) * rM },
-      { name: "Energy", changePercent: (-0.54 - (catOffset*0.3)) * rM },
-      { name: "Real Estate", changePercent: (-1.21 - (catOffset*0.2)) * rM },
-      { name: "Materials", changePercent: (-1.55 + catOffset) * rM }
-    ];
+    })).slice(0, 7) : [];
 
-    // 4. Sector Heatmap (with fallback)
     const sectorHeatmap = sectorHeatmapRaw && sectorHeatmapRaw.length > 0 ? sectorHeatmapRaw.map((s: any) => ({
       name: s.sector,
       changePercent: s.changesPercentage,
       color: s.changesPercentage >= 0 ? 'green' : 'red',
       marketCap: 'N/A' 
-    })) : [
-      { name: "Technology", changePercent: 1.45, color: "green", marketCap: "N/A" },
-      { name: "Healthcare", changePercent: 0.85, color: "green", marketCap: "N/A" },
-      { name: "Financials", changePercent: 0.32, color: "green", marketCap: "N/A" },
-      { name: "Consumer Discretionary", changePercent: -0.12, color: "red", marketCap: "N/A" },
-      { name: "Energy", changePercent: -0.54, color: "red", marketCap: "N/A" },
-      { name: "Real Estate", changePercent: -1.21, color: "red", marketCap: "N/A" },
-      { name: "Industrials", changePercent: 0.22, color: "green", marketCap: "N/A" },
-      { name: "Utilities", changePercent: -0.88, color: "red", marketCap: "N/A" }
-    ];
+    })) : [];
 
     // 5. Market News
     let mergedNews = this.deduplicateNews(marketNewsRaw);
@@ -171,28 +152,10 @@ class DashboardService {
         changePercent: m.changesPercentage || 0,
         volume: m.volume || 0
       }))
-    } : {
-      gainers: [
-        { symbol: "NVDA", company: "NVIDIA Corp", price: 125.40 * rM, change: 5.20 * rM, changePercent: 4.32 * rM, volume: 45000000 },
-        { symbol: "AMD", company: "Advanced Micro Devices", price: 165.22 * rM, change: 4.10 * rM, changePercent: 2.54 * rM, volume: 22000000 },
-        { symbol: "PLTR", company: "Palantir Tech", price: 24.10 * rM, change: 1.15 * rM, changePercent: 5.01 * rM, volume: 15000000 }
-      ],
-      losers: [
-        { symbol: "TSLA", company: "Tesla Inc", price: 175.50 * rM, change: -4.20 * rM, changePercent: -2.33 * rM, volume: 32000000 },
-        { symbol: "INTC", company: "Intel Corp", price: 30.15 * rM, change: -0.85 * rM, changePercent: -2.74 * rM, volume: 18000000 },
-        { symbol: "BA", company: "Boeing Co", price: 188.40 * rM, change: -5.10 * rM, changePercent: -2.63 * rM, volume: 12000000 }
-      ],
-      mostActive: [
-        { symbol: "AAPL", company: "Apple Inc", price: 189.20 * rM, change: 1.20 * rM, changePercent: 0.63 * rM, volume: 55000000 },
-        { symbol: "NVDA", company: "NVIDIA Corp", price: 125.40 * rM, change: 5.20 * rM, changePercent: 4.32 * rM, volume: 45000000 },
-        { symbol: "TSLA", company: "Tesla Inc", price: 175.50 * rM, change: -4.20 * rM, changePercent: -2.33 * rM, volume: 32000000 },
-        { symbol: "MSFT", company: "Microsoft Corp", price: 415.50 * rM, change: 2.10 * rM, changePercent: 0.50 * rM, volume: 28000000 },
-        { symbol: "AMZN", company: "Amazon.com Inc", price: 185.30 * rM, change: 1.50 * rM, changePercent: 0.81 * rM, volume: 25000000 }
-      ]
-    };
+    } : null;
     
     // Simulate Category filtering for Top Movers if not Overview
-    if (category !== 'Overview') {
+    if (category !== 'Overview' && topMovers && topMovers.mostActive && topMovers.mostActive.length > 0) {
       const pId = category.substring(0,3).toUpperCase();
       topMovers.mostActive[0] = { symbol: pId, company: `${category} Leader`, price: 100 * rM, change: 1 * rM, changePercent: 1 * rM, volume: 1000000 };
     }
@@ -203,13 +166,8 @@ class DashboardService {
     }));
 
     // 8. Social Buzz (with fallback)
-    const socialBuzz = (Array.isArray(trendingReddit) && trendingReddit.length > 0 ? trendingReddit : [
-      { ticker: category === 'Overview' ? "NVDA" : `${category.substring(0,2).toUpperCase()}1`, no_of_comments: 4532, sentiment: "Bullish" },
-      { ticker: category === 'Overview' ? "TSLA" : `${category.substring(0,2).toUpperCase()}2`, no_of_comments: 3210, sentiment: "Bearish" },
-      { ticker: category === 'Overview' ? "AAPL" : `${category.substring(0,2).toUpperCase()}3`, no_of_comments: 2854, sentiment: "Bullish" },
-      { ticker: category === 'Overview' ? "GME" : `${category.substring(0,2).toUpperCase()}4`, no_of_comments: 1823, sentiment: "Bullish" },
-      { ticker: category === 'Overview' ? "AMD" : `${category.substring(0,2).toUpperCase()}5`, no_of_comments: 1540, sentiment: "Bullish" }
-    ]).slice(0, 5).map((r: any) => ({
+    const trendingRedditPosts = trendingReddit?.posts || [];
+    const socialBuzz = (Array.isArray(trendingRedditPosts) && trendingRedditPosts.length > 0 ? trendingRedditPosts : []).slice(0, 5).map((r: any) => ({
       symbol: r.ticker || 'N/A',
       mentionCount: r.no_of_comments || 0,
       bullishPercent: r.sentiment === 'Bullish' ? Math.floor(Math.random() * 40 + 60) : Math.floor(Math.random() * 30 + 10),
@@ -234,45 +192,29 @@ class DashboardService {
       this.normalizeQuote(etfPerformanceRaw[4], category === 'Overview' ? 'Vanguard Total Stock Market' : `${category} ETF 5`, category === 'Overview' ? 'VTI' : `${category.substring(0,3).toUpperCase()}V`)
     ].filter(e => e.price > 0);
 
-    // 11. IPO Calendar (with fallback)
     const ipoCalendar = ipoCalendarRaw && ipoCalendarRaw.length > 0 ? ipoCalendarRaw.slice(0, 10).map((i: any) => ({
-      company: i.companyName || i.name,
+      company: i.companyName || i.name || i.company,
       symbol: i.symbol,
       date: i.date,
       exchange: i.exchange
-    })) : [
-      { company: "Stripe Inc", symbol: "STRP", date: "2026-08-15", exchange: "NASDAQ" },
-      { company: "Databricks", symbol: "DBRK", date: "2026-09-02", exchange: "NYSE" },
-      { company: "Anthropic", symbol: "ANTH", date: "2026-10-12", exchange: "NASDAQ" }
-    ];
+    })) : [];
 
-    // 12. Economic Calendar (with fallback)
     const economicCalendar = economicCalendarRaw && economicCalendarRaw.length > 0 ? economicCalendarRaw.slice(0, 10).map((e: any) => ({
       event: e.event,
       date: e.date,
       country: e.country,
       actual: e.actual,
-      estimate: e.estimate
-    })) : [
-      { event: "Core CPI (MoM)", date: new Date().toISOString(), country: "US", actual: "0.2%", estimate: "0.2%" },
-      { event: "Initial Jobless Claims", date: new Date(Date.now() + 86400000).toISOString(), country: "US", actual: null, estimate: "215K" },
-      { event: "Nonfarm Payrolls", date: new Date(Date.now() + 86400000 * 3).toISOString(), country: "US", actual: null, estimate: "185K" }
-    ];
+      estimate: e.estimate || e.consensus
+    })) : [];
 
     // 13. Market Statistics
-    const marketStatistics = topMoversRaw && topMoversRaw.length > 0 ? {
+    const marketStatistics = topMoversRaw && topMoversRaw.length > 0 && topMovers ? {
       advancingStocks: topMovers.mostActive.filter((m: any) => m.changePercent >= 0).length * 100, 
       decliningStocks: topMovers.mostActive.filter((m: any) => m.changePercent < 0).length * 100,
       newHighs: 150,
       newLows: 45,
       putCallRatio: 0.85
-    } : {
-      advancingStocks: 4235,
-      decliningStocks: 1842,
-      newHighs: 215,
-      newLows: 34,
-      putCallRatio: 0.72
-    };
+    } : null;
 
     return {
       marketPulse,

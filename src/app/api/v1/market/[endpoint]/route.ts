@@ -68,7 +68,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ endpoint
         }
       };
 
-      // Helper to fetch Discover
       const getDiscover = async () => {
         const now = Date.now();
         if (cachedDiscover && now - lastDiscoverFetchTime < CACHE_DURATION_MS && !refresh) {
@@ -86,19 +85,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ endpoint
           return cachedDiscover || null;
         });
         
-        return discoverPromise;
+        return cachedDiscover || null; // Return cached or null immediately, don't await the promise
       };
 
-      const [dashboard, mood, trending, discover] = await Promise.all([
+      // Start discover fetch in background if not cached
+      getDiscover();
+
+      const [dashboard, mood, trending] = await Promise.all([
         dashboardService.getDashboardData(refresh, category).catch(() => null),
         getMood(),
-        yahooFinanceService.getTrending().catch(() => []),
-        getDiscover()
+        yahooFinanceService.getTrending().catch(() => [])
       ]);
 
       return NextResponse.json({
         success: true,
-        data: { dashboard, mood, trending, discover }
+        data: { dashboard, mood, trending, discover: cachedDiscover || null }
       });
     }
 
